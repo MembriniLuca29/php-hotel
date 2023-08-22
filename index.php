@@ -39,8 +39,8 @@
         ],
 
     ];
+    
     $selectedParking = isset($_GET['parking']) ? $_GET['parking'] : null;
-
 
 function filterHotels($hotels, $parking) {
     if ($parking === 'yes') {
@@ -52,14 +52,23 @@ function filterHotels($hotels, $parking) {
             return !$hotel['parking'];
         });
     } else {
-        return $hotels; 
+        return $hotels;
     }
 }
 
-
 $filteredHotels = filterHotels($hotels, $selectedParking);
 
+$selectedRating = isset($_GET['rating']) ? $_GET['rating'] : null;
+
+function filterHotelsByRating($hotels, $rating) {
+    return array_filter($hotels, function($hotel) use ($rating) {
+        return $hotel['vote'] >= $rating;
+    });
+}
+
+$filteredHotelsByRating = filterHotelsByRating($filteredHotels, $selectedRating);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -72,14 +81,25 @@ $filteredHotels = filterHotels($hotels, $selectedParking);
 <body>
     <div>
     <form action="index.php" method="GET">
-        <label>
-            <input type="radio" name="parking" value="yes"> Yes
-        </label>
-        <label>
-            <input type="radio" name="parking" value="no"> No
-        </label>
-        <button type="submit">Filter</button>
-    </form></div>
+            <label>
+                <input type="radio" name="parking" value="any" <?php echo $selectedParking === 'any' ? 'checked' : ''; ?>> Any
+            </label>
+            <label>
+                <input type="radio" name="parking" value="yes" <?php echo $selectedParking === 'yes' ? 'checked' : ''; ?>> Yes
+            </label>
+            <label>
+                <input type="radio" name="parking" value="no" <?php echo $selectedParking === 'no' ? 'checked' : ''; ?>> No
+            </label>
+            <label for="rating">Rating:</label>
+            <select name="rating" id="rating">
+                <option value="">any</option>
+                <?php for ($i = 5; $i >= 1; $i--) { ?>
+                    <option value="<?php echo $i; ?>" <?php echo $selectedRating == $i ? 'selected' : ''; ?>><?php echo $i; ?> and above</option>
+                <?php } ?>
+            </select>
+            <button type="submit">Filter</button>
+        </form>
+</div>
 
     <table>
         <thead>
@@ -94,7 +114,7 @@ $filteredHotels = filterHotels($hotels, $selectedParking);
         </thead>
         <tbody>
             <?php
-                foreach ($filteredHotels as $index => $hotel) {
+                foreach ($filteredHotelsByRating as $index => $hotel) {
             ?>
                 <tr>
                     <td><?php echo $index + 1; ?></td>
